@@ -1,5 +1,4 @@
 // TODO:
-// * support rotate
 // * make pause feature
 // * beautiful styling
 // * unfocus the new game button so it does not continue respond to space
@@ -85,7 +84,7 @@ function is_legal(shape) {
 		legal = legal && 
 			item[0] >= 0 && item[0] < WIDTH &&
 			item[1] < HEIGHT && 
-			cell_empty(item);
+			(item[1] < 0 || cell_empty(item));
 	});
 	return legal;
 }
@@ -128,7 +127,10 @@ function moved_shape(shape, delta) {
 
 		newcells.push([x+delta[0], y+delta[1]]);
 	});
-	return new ShapeObject(newcells, shape.rotpnt, shape.color);
+	var rp = new RotateSE(
+			shape.rotpnt.x + delta[0], 
+			shape.rotpnt.y + delta[1]);
+	return new ShapeObject(newcells, rp, shape.color);
 }
 
 function drop(shape) {
@@ -157,8 +159,40 @@ function move_right(shape) {
 function move_down(shape) {
 	return moved_shape(shape, [0, 1]);
 }
+
+function rotated_shape(shape, delta){
+	function translate(cell, rotpnt) {
+		// assumes rotpnt is a SE rotate point
+		var x = cell[0];
+		var y = cell[1];
+		var nx = x - rotpnt.x - ((x <= rotpnt.x) ? 1 : 0);
+		var ny = y - rotpnt.y - ((y <= rotpnt.y) ? 1 : 0);
+		return [nx, ny];
+	}
+	function rotate(cell){
+		var x = cell[0];
+		var y = cell[1];
+		return [y * delta[0], x * delta[1]];
+	}
+	function untranslate(cell, rotpnt){
+		// assumes rotpnt is a SE rotate point
+		var x = cell[0];
+		var y = cell[1];
+		var nx = x + rotpnt.x + ((x < 0) ? 1 : 0);
+		var ny = y + rotpnt.y + ((y < 0) ? 1 : 0);
+		return [nx, ny];
+	}
+
+	var newcells = [];
+	rp = shape.rotpnt;
+	shape.cells.forEach(function (item) {
+		var nc = untranslate(rotate(translate(item, rp)), rp);
+		newcells.push(nc)
+	});
+	return new ShapeObject(newcells, shape.rotpnt, shape.color);
+}
+
 function rotate_left(shape) {
-	return shape;
 	return rotated_shape(shape, [-1, 1]);
 }
 function rotate_right(shape) {
@@ -207,7 +241,7 @@ function commit_shape(shape) {
 		GAME_SCORE = GAME_SCORE + collapse.length ** 2;
 		var newmap = new Array();
 		for( var row = 0; row < collapse.length; row++ ){
-			newmap.push(new Array(WIDTH));
+			newmap.push(empty_row());
 		}
 		for( var row = 0; row < HEIGHT; row++ ){
 			if( !collapse.includes(row) ){
@@ -341,10 +375,18 @@ function new_drop() {
 	}
 }
 
+function empty_row() {
+	var rr = [];
+	for( var x; x<WIDTH; x++ ){
+		rr.push(null);
+	}
+	return rr;
+}
+
 function new_tetris_game() {
 	MAP = new Array(HEIGHT);
 	for( var row = 0; row < HEIGHT; row++ ){
-		MAP[row] = new Array(WIDTH);
+		MAP[row] = empty_row();
 	}
 	clear_all();
 	GAME_PULSE = 0;
