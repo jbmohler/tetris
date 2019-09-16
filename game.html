@@ -1,0 +1,26 @@
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>Tetris</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	<script src="tetris.js"></script>
+	<style>
+#board {
+  float: left;
+}
+#controls {
+  float: right;
+}
+	</style>
+</head>
+<body>
+	<div id="container">
+		<canvas id="board" width="100" height="300" style="border:8px solid #000000;"></canvas>
+		<div id="controls">
+			<button type="button" onclick="new_tetris_game()">New Game</button> 
+			<p id="pulse">game pulse</p>
+			<p id="score">score</p>
+		</div>
+	</div>
+</body>
+</html>
