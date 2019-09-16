@@ -1,3 +1,9 @@
+// TODO:
+// * support rotate
+// * make pause feature
+// * beautiful styling
+// * unfocus the new game button so it does not continue respond to space
+
 var BOX_DIMN = 10;
 var WIDTH = 10;
 var HEIGHT = 30;
@@ -11,10 +17,10 @@ var SHAPE_COLOR = {
 
 var GAME_PULSE = 0;
 var GAME_SCORE = 0;
+var GAME_STATE = "empty";
 
+var MAP = null;
 var dropping = null;
-
-var MAP = new Array(WIDTH*HEIGHT);
 
 function clear_all(){
 	var canvas = document.getElementById("board");
@@ -27,7 +33,6 @@ function clear_all(){
 function clearbox(x, y){
 	var canvas = document.getElementById("board");
 	var ctx = canvas.getContext("2d");
-	//alert(x, 'asdf', y);
 
 	ctx.fillStyle = "#ffffff";
 	ctx.fillRect(x*BOX_DIMN, y*BOX_DIMN, BOX_DIMN, BOX_DIMN);
@@ -41,19 +46,46 @@ function drawbox(x, y, color){
 	ctx.fillRect(x*BOX_DIMN, y*BOX_DIMN, BOX_DIMN, BOX_DIMN);
 }
 
+function full_redraw(){
+	var canvas = document.getElementById("board");
+	var ctx = canvas.getContext("2d");
+
+	for( var y = 0; y < HEIGHT; y++ ){
+		for( var x = 0; x < WIDTH; x++ ){
+			var color = MAP[y][x];
+			if( color == null ){
+				color = "#ffffff";
+			}
+			ctx.fillStyle = color;
+			ctx.fillRect(x*BOX_DIMN, y*BOX_DIMN, BOX_DIMN, BOX_DIMN);
+		}
+	}
+}
+
 function cell_empty(item) {
 	x = item[0];
 	y = item[1];
-	return MAP[y*WIDTH+x] == null;
+	return MAP[y][x] == null;
+}
+
+function row_full(row) {
+	var rowcells = MAP[row];
+	for( var x = 0; x < WIDTH; x++ ){
+		if( rowcells[x] == null ){
+			return false;
+		}
+	}
+	return true;
 }
 
 function is_legal(shape) {
 	var legal = true;
 	shape.cells.forEach(function (item) {
 		//console.log(GAME_PULSE+":  "+item[0]+"--"+item[1]+"->"+HEIGHT+"<-"+legal)
-		legal = legal && cell_empty(item) && 
+		legal = legal && 
 			item[0] >= 0 && item[0] < WIDTH &&
-			item[1] < HEIGHT;
+			item[1] < HEIGHT && 
+			cell_empty(item);
 	});
 	return legal;
 }
@@ -134,6 +166,10 @@ function rotate_right(shape) {
 }
 
 function keyevent(event){
+	if( GAME_STATE != "active" || dropping == null ){
+		return;
+	}
+
 	var func = {
 			"j": move_left,
 			"l": move_right,
@@ -159,30 +195,35 @@ function commit_shape(shape) {
 		if( !rows.includes(y) ) {
 			rows.push(y);
 		}
-		MAP[y*WIDTH+x] = shape.color;
+		MAP[y][x] = shape.color;
 	});
 	var collapse = [];
 	rows.forEach(function (row) {
-		var full = true;
-		for( var x = 0; x < WIDTH; x++ ){
-			if( cell_empty([x, row]) ) {
-				full = false;
-				break;
-			}
-		}
-		if( full ){
+		if( row_full(row) ){
 			collapse.push(row);
 		}
 	});
 	if( collapse.length > 0 ){
 		GAME_SCORE = GAME_SCORE + collapse.length ** 2;
-		collapse = collapse.sort(function(a, b){return b-a});
-		collapse.forEach(function (row, index) {
-		});
+		var newmap = new Array();
+		for( var row = 0; row < collapse.length; row++ ){
+			newmap.push(new Array(WIDTH));
+		}
+		for( var row = 0; row < HEIGHT; row++ ){
+			if( !collapse.includes(row) ){
+				newmap.push(MAP[row]);
+			}
+		}
+		MAP = newmap;
+		full_redraw();
 	}
 }
 
 function tickevent(){
+	if( GAME_STATE != "active" ){
+		return;
+	}
+
 	if( dropping != null ){
 		var target = move_down(dropping);
 		if( is_legal(target) ) {
@@ -290,16 +331,24 @@ function new_drop() {
 	var shape = random_shape();
 	var xdiff = WIDTH/2 - 1 - shape.rotpnt.x;
 	var ydiff = 0 - shape.rotpnt.y;
-	dropping = moved_shape(shape, [xdiff, ydiff]);
-	paint_object(dropping);
+	shape = moved_shape(shape, [xdiff, ydiff]);
+	if( is_legal(shape) ){
+		dropping = shape;
+		paint_object(dropping);
+	}else{
+		$('#winloss').text("game over");
+		GAME_STATE = "game-over";
+	}
 }
 
 function new_tetris_game() {
-	MAP.forEach(function (item, index) {
-		MAP[index] = null;
-	});
+	MAP = new Array(HEIGHT);
+	for( var row = 0; row < HEIGHT; row++ ){
+		MAP[row] = new Array(WIDTH);
+	}
 	clear_all();
 	GAME_PULSE = 0;
+	GAME_STATE = "active";
 	new_drop();
 }
 
