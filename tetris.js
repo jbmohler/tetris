@@ -1,15 +1,15 @@
 // TODO:
 // * make pause feature
-// * beautiful styling
-// * unfocus the new game button so it does not continue respond to space
+// * difficulty: easy, medium, hard
+// * high score in client-side indexdb
 
-var BOX_DIMN = 10;
+var BOX_DIMN = 20;
 var WIDTH = 10;
-var HEIGHT = 30;
+var HEIGHT = 25;
 var SHAPE_COLOR = {
 	"red": "#ff1a1a",
 	"blue": "#1a1aff",
-	"yellow": "#e6e600",
+	"yellow": "#ffa500",
 	"green": "#00b33c",
 	"purple": "#6600ff",
 	"magenta": "#ff00ff"}
@@ -27,6 +27,20 @@ function clear_all(){
 
 	ctx.fillStyle = "white";
 	ctx.fillRect(0, 0, WIDTH*BOX_DIMN, HEIGHT*BOX_DIMN);
+
+	for( var y = 0; y < HEIGHT; y++ ){
+		for( var x = 0; x < WIDTH; x++ ){
+			ctx.fillStyle = "#ffffff";
+			ctx.fillRect(x*BOX_DIMN, y*BOX_DIMN, BOX_DIMN, BOX_DIMN);
+			if( MAP[y][x] == null ){
+				ctx.beginPath();
+				ctx.strokeStyle = "lightGray";
+				ctx.rect(x*BOX_DIMN, y*BOX_DIMN, BOX_DIMN, BOX_DIMN);
+				ctx.stroke();
+			}
+		}
+	}
+
 }
 
 function clearbox(x, y){
@@ -35,6 +49,10 @@ function clearbox(x, y){
 
 	ctx.fillStyle = "#ffffff";
 	ctx.fillRect(x*BOX_DIMN, y*BOX_DIMN, BOX_DIMN, BOX_DIMN);
+	ctx.beginPath();
+	ctx.strokeStyle = "lightGray";
+	ctx.rect(x*BOX_DIMN, y*BOX_DIMN, BOX_DIMN, BOX_DIMN);
+	ctx.stroke();
 }
 
 function drawbox(x, y, color){
@@ -43,6 +61,10 @@ function drawbox(x, y, color){
 
 	ctx.fillStyle = SHAPE_COLOR[color];
 	ctx.fillRect(x*BOX_DIMN, y*BOX_DIMN, BOX_DIMN, BOX_DIMN);
+	ctx.beginPath();
+	ctx.strokeStyle = "white";
+	ctx.rect(x*BOX_DIMN+2, y*BOX_DIMN+2, BOX_DIMN-4, BOX_DIMN-4);
+	ctx.stroke();
 }
 
 function full_redraw(){
@@ -54,9 +76,22 @@ function full_redraw(){
 			var color = MAP[y][x];
 			if( color == null ){
 				color = "#ffffff";
+			} else {
+				color = SHAPE_COLOR[color];
 			}
 			ctx.fillStyle = color;
 			ctx.fillRect(x*BOX_DIMN, y*BOX_DIMN, BOX_DIMN, BOX_DIMN);
+			if( MAP[y][x] == null ){
+				ctx.beginPath();
+				ctx.strokeStyle = "lightGray";
+				ctx.rect(x*BOX_DIMN, y*BOX_DIMN, BOX_DIMN, BOX_DIMN);
+				ctx.stroke();
+			} else {
+				ctx.beginPath();
+				ctx.strokeStyle = "white";
+				ctx.rect(x*BOX_DIMN+2, y*BOX_DIMN+2, BOX_DIMN-4, BOX_DIMN-4);
+				ctx.stroke();
+			}
 		}
 	}
 }
@@ -395,6 +430,13 @@ function new_tetris_game() {
 }
 
 $(document).ready(function() {
+	// Prevent capturing focus by the button.
+	$('#newgame').on('mousedown', 
+	    /** @param {!jQuery.Event} event */ 
+	    function(event) {
+		event.preventDefault();
+	    }
+	);
 	$('body').on('keydown', keyevent);
-	setInterval(tickevent, 1000);
+	setInterval(tickevent, 400);
 });
