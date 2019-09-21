@@ -234,7 +234,7 @@ function rotate_right(shape) {
 	return rotated_shape(shape, [1, -1]);
 }
 
-function keyevent(event){
+function control_steer(ekey){
 	if( GAME_STATE != "active" || dropping == null ){
 		return;
 	}
@@ -243,16 +243,32 @@ function keyevent(event){
 			"j": move_left,
 			"l": move_right,
 			"i": rotate_left,
-			"k": rotate_right}[event.key];
-	if( func !== undefined ){
-		var target = func(dropping);
-		if( is_legal(target) ) {
-			paint_update_cell(dropping, target);
-			dropping = target;
-		}
+			"k": rotate_right}[ekey];
+
+	var target = func(dropping);
+	if( is_legal(target) ) {
+		paint_update_cell(dropping, target);
+		dropping = target;
+	}
+}
+
+function control_drop(){
+	if( GAME_STATE != "active" || dropping == null ){
+		return;
+	}
+
+	drop(dropping);
+}
+
+function keyevent(event){
+	if( ['j', 'l', 'i', 'k'].includes(event.key) ) {
+		control_steer(event.key);
 	}
 	if( event.key == ' ' ){
-		drop(dropping);
+		control_drop();
+	}
+	if( event.keyCode == 32 && event.target == document.body ) {
+		event.preventDefault();
 	}
 }
 
@@ -429,14 +445,19 @@ function new_tetris_game() {
 	new_drop();
 }
 
+function eatevent(event) {
+	event.preventDefault();
+}
+
 $(document).ready(function() {
 	// Prevent capturing focus by the button.
-	$('#newgame').on('mousedown', 
-	    /** @param {!jQuery.Event} event */ 
-	    function(event) {
-		event.preventDefault();
-	    }
-	);
+	$('#newgame').on('mousedown', eatevent);
+	$('#leftrotate').on('mousedown', eatevent);
+	$('#leftmove').on('mousedown', eatevent);
+	$('#rightrotate').on('mousedown', eatevent);
+	$('#rightmove').on('mousedown', eatevent);
+	$('#drop').on('mousedown', eatevent);
+
 	$('body').on('keydown', keyevent);
 	setInterval(tickevent, 400);
 });
