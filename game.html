@@ -62,18 +62,29 @@
 			<br />
 			<button class="ctlbtn" id="drop" type="button"
 				onclick="control_drop()">Drop</button> 
-			<p id="instructions"><b>instructions:  </b>Click new game and fit the falling blocks
-			together to fill rows completely.  Filling more than one row
-			simultaneously give bonus points.  Use the following keys.
-			<ul>
-				<li>space - drop the block immediately</li>
-				<li>j - move the block right</li>
-				<li>l - move the block left</li>
-				<li>k - rotate the block clockwise</li>
-				<li>i - rotate the block counter-clockwise</li>
-			</ul>
+			<p>
+			<table id="highscores" border=1 cellspacing=0>
+				<thead><tr>
+					<th>Name</th>
+					<th>Score</th>
+					<th>Date</th>
+				</tr></thead>
+				<tbody>
+				</tbody>
+			</table>
 			</p>
 		</div>
+		<p id="instructions"><b>instructions:  </b>Click new game and fit the falling blocks
+		together to fill rows completely.  Filling more than one row
+		simultaneously give bonus points.  Use the following keys.
+		<ul>
+			<li>space - drop the block immediately</li>
+			<li>j - move the block right</li>
+			<li>l - move the block left</li>
+			<li>k - rotate the block clockwise</li>
+			<li>i - rotate the block counter-clockwise</li>
+		</ul>
+		</p>
 	</div>
 </body>
 </html>

@@ -20,6 +20,7 @@ var GAME_STATE = "empty";
 
 var MAP = null;
 var dropping = null;
+var hsdb = null;
 
 function clear_all(){
 	var canvas = document.getElementById("board");
@@ -423,6 +424,34 @@ function new_drop() {
 	}else{
 		$('#winloss').text("game over");
 		GAME_STATE = "game-over";
+
+		read_top_10(hsdb, function (hslist) {
+			console.log("checking out "+hslist.length);
+			if( hslist.length >= 10 && hslist[hslist.length-1].score >= GAME_SCORE ) {
+				return;
+			}
+
+			// record the high score
+			var name = prompt("High score name", "");
+			if( name != null && name != "" ){
+				var data = {
+					"name": name,
+					"score": GAME_SCORE,
+					"created": new Date().getTime()
+				}
+
+				var trans = hsdb.transaction(["scores"], "readwrite");
+				var store = trans.objectStore("scores");
+
+				console.log("writing the name");
+				var request = store.put(data);
+
+				request.onsuccess = function(e) {
+					// update the table
+					//html5rocks.indexedDB.getAllTodoItems();
+				};
+			}
+		});
 	}
 }
 
@@ -445,6 +474,69 @@ function new_tetris_game() {
 	new_drop();
 }
 
+function format(date) {
+	date = new Date(date);
+
+	var day = ('0' + date.getDate()).slice(-2);
+	var month = ('0' + (date.getMonth() + 1)).slice(-2);
+	var year = date.getFullYear();
+
+	return year + '-' + month + '-' + day;
+}
+
+function read_top_10(hsdb, oncomplete){
+	var objectStore = hsdb.transaction("scores").objectStore("scores");
+
+	var hslist = [];
+	objectStore.openCursor().onsuccess = function(event) {
+		var cursor = event.target.result;
+		if (cursor) {
+			hslist.push(cursor.value);
+			cursor.continue();
+		} else {
+			hslist.sort(function (a, b) {return b.score - a.score});
+
+			oncomplete(hslist);
+
+			console.log("No more entries!");
+		}
+	};
+}
+
+function prepare_high_score(){
+	'use strict';
+
+	//check for support
+	if (!('indexedDB' in window)) {
+		console.log('This browser doesn\'t support IndexedDB');
+		return;
+	}
+
+	var idb = window.indexedDB;
+	var idbopen = idb.open('tetris-high-score', 2);
+	console.log('opening');
+
+	idbopen.onupgradeneeded = function(event) {
+		var db = event.target.result;
+
+		if (!db.objectStoreNames.contains('scores')) {
+			console.log('upgrading');
+			db.createObjectStore('scores', {keyPath: 'rowid', autoIncrement: true});
+		}
+	};
+
+	idbopen.onsuccess = function(event) {
+		console.log('going to read');
+		hsdb = event.target.result;
+		read_top_10(hsdb, function (hslist) {
+			hslist.forEach(function (v) {
+				// read and fill the high score table
+				$("#highscores tr:last").after("<tr><td>"+v.name+"</td><td>"+v.score+"</td><td>"+format(v.created)+"</td></tr>");
+			});
+		});
+	};
+}
+
 function eatevent(event) {
 	event.preventDefault();
 }
@@ -460,4 +552,6 @@ $(document).ready(function() {
 
 	$('body').on('keydown', keyevent);
 	setInterval(tickevent, 400);
+
+	prepare_high_score();
 });
