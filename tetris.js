@@ -445,10 +445,15 @@ function new_drop() {
 
 				console.log("writing the name");
 				var request = store.put(data);
+				if( hslist.length >= 10 ){
+					hslist.slice(9).forEach(function (v) {
+						console.log(JSON.stringify(v, null, 4));
+						store.delete(v.rowid);
+					});
+				}
 
 				request.onsuccess = function(e) {
-					// update the table
-					//html5rocks.indexedDB.getAllTodoItems();
+					load_hs_table(hsdb);
 				};
 			}
 		});
@@ -503,6 +508,16 @@ function read_top_10(hsdb, oncomplete){
 	};
 }
 
+function load_hs_table(hsdb){
+	$("#highscores tbody").empty();
+	read_top_10(hsdb, function (hslist) {
+		hslist.forEach(function (v) {
+			// read and fill the high score table
+			$("#highscores tbody").append("<tr><td>"+v.name+"</td><td>"+v.score+"</td><td>"+format(v.created)+"</td></tr>");
+		});
+	});
+}
+
 function prepare_high_score(){
 	'use strict';
 
@@ -528,12 +543,7 @@ function prepare_high_score(){
 	idbopen.onsuccess = function(event) {
 		console.log('going to read');
 		hsdb = event.target.result;
-		read_top_10(hsdb, function (hslist) {
-			hslist.forEach(function (v) {
-				// read and fill the high score table
-				$("#highscores tr:last").after("<tr><td>"+v.name+"</td><td>"+v.score+"</td><td>"+format(v.created)+"</td></tr>");
-			});
-		});
+		load_hs_table(hsdb);
 	};
 }
 
