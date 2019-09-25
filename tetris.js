@@ -1,7 +1,6 @@
 // TODO:
-// * make pause feature
 // * difficulty: easy, medium, hard
-// * high score in client-side indexdb
+// * congealing shapes on commit
 
 var BOX_DIMN = 20;
 var WIDTH = 10;
@@ -261,6 +260,18 @@ function control_drop(){
 	drop(dropping);
 }
 
+function control_pause(){
+	if( GAME_STATE != "active" && GAME_STATE != "pause" ){
+		return;
+	}
+	$('#pause').toggleClass('red');	
+	if( GAME_STATE == "active" ){
+		GAME_STATE = "pause";
+	} else if( GAME_STATE == "pause" ){
+		GAME_STATE = "active";
+	}
+}
+
 function keyevent(event){
 	if( ['j', 'l', 'i', 'k'].includes(event.key) ) {
 		control_steer(event.key);
@@ -432,7 +443,10 @@ function new_drop() {
 			}
 
 			// record the high score
-			var name = prompt("High score name", "");
+			var name = "";
+			while( name == null || name == "" ){
+				name = prompt("High score name", "");
+			}
 			if( name != null && name != "" ){
 				var data = {
 					"name": name,
@@ -513,7 +527,11 @@ function load_hs_table(hsdb){
 	read_top_10(hsdb, function (hslist) {
 		hslist.forEach(function (v) {
 			// read and fill the high score table
-			$("#highscores tbody").append("<tr><td>"+v.name+"</td><td>"+v.score+"</td><td>"+format(v.created)+"</td></tr>");
+			var n = v.name;
+			if( n.length > 15 ){
+				n = n.slice(0, 15);
+			}
+			$("#highscores tbody").append("<tr><td>"+n+"</td><td>"+v.score+"</td><td>"+format(v.created)+"</td></tr>");
 		});
 	});
 }
@@ -559,6 +577,7 @@ $(document).ready(function() {
 	$('#rightrotate').on('mousedown', eatevent);
 	$('#rightmove').on('mousedown', eatevent);
 	$('#drop').on('mousedown', eatevent);
+	$('#pause').on('mousedown', eatevent);
 
 	$('body').on('keydown', keyevent);
 	setInterval(tickevent, 400);
