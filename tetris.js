@@ -40,7 +40,6 @@ function clear_all(){
 			}
 		}
 	}
-
 }
 
 function clearbox(x, y){
@@ -488,8 +487,10 @@ function new_tetris_game() {
 		MAP[row] = empty_row();
 	}
 	clear_all();
+	GAME_SCORE = 0;
 	GAME_PULSE = 0;
 	GAME_STATE = "active";
+	$('#score').text('score '+(GAME_SCORE+0));
 	new_drop();
 }
 
