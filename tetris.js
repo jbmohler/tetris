@@ -8,9 +8,10 @@ var HEIGHT = 25;
 var SHAPE_COLOR = {
 	"red": "#ff1a1a",
 	"blue": "#1a1aff",
-	"yellow": "#ffa500",
+	"yellow": "#fdd835",
 	"green": "#00b33c",
-	"purple": "#6600ff",
+	"purple": "#7e57c2",
+	"orange": "#f4511e",
 	"magenta": "#ff00ff"}
 
 var GAME_PULSE = 0;
@@ -376,6 +377,12 @@ function shape_long() {
 	return x;
 }
 
+function shape_fang() {
+	cells = [[1, 1], [2, 1], [3, 1], [2, 2]];
+	var x = new ShapeObject(cells, new RotateSE(2, 1), "orange");
+	return x;
+}
+
 function shape_offset_r() {
 	cells = [[1, 1], [1, 2], [2, 2], [2, 3]];
 	var x = new ShapeObject(cells, new RotateSE(1, 1), "red");
@@ -407,9 +414,10 @@ function shape_square() {
 }
 
 function random_shape() {
-	var index = Math.floor(Math.random() * 6);
+	var index = Math.floor(Math.random() * 7);
 	var func = {
 		0: shape_long,
+		6: shape_fang,
 		1: shape_offset_r,
 		3: shape_offset_l,
 		5: shape_ell_r,
